@@ -1,0 +1,53 @@
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+body {
+  font-family: 'Vazirmatn', sans-serif;
+  direction: rtl;
+  background-color: #f3f4f6;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-layout {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+}
+
+.login-page, .verify-otp-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  backgroun
+
+cat > styles/main.css << 'EOF'
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+body {
+  font-family: 'Vazirmatn', sans-serif;
+  direction: rtl;
+  background-color: #f3f4f6;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-layout {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+}
+
+.login-page, .verify-otp-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}

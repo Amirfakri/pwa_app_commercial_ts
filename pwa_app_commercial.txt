@@ -1,0 +1,249 @@
+pwa_app_commercial/
+│
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
+│
+├── backend/
+│   ├── src/
+│   │   ├── modules/
+│   │   │   ├── auth/
+│   │   │   │   ├── controllers/
+│   │   │   │   │   └── auth.controller.ts
+│   │   │   │   ├── services/
+│   │   │   │   │   └── auth.service.ts
+│   │   │   │   ├── repositories/
+│   │   │   │   │   └── user.repository.ts
+│   │   │   │   ├── validators/
+│   │   │   │   │   └── auth.validator.ts
+│   │   │   │   ├── routes/
+│   │   │   │   │   └── auth.routes.ts
+│   │   │   │   ├── types/
+│   │   │   │   │   └── auth.types.ts
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   ├── price/
+│   │   │   │   ├── controllers/
+│   │   │   │   │   └── price.controller.ts
+│   │   │   │   ├── services/
+│   │   │   │   │   └── price.service.ts
+│   │   │   │   ├── repositories/
+│   │   │   │   │   └── price.repository.ts
+│   │   │   │   ├── validators/
+│   │   │   │   │   └── price.validator.ts
+│   │   │   │   ├── routes/
+│   │   │   │   │   └── price.routes.ts
+│   │   │   │   ├── types/
+│   │   │   │   │   └── price.types.ts
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   ├── transaction/
+│   │   │   │   ├── controllers/
+│   │   │   │   │   └── transaction.controller.ts
+│   │   │   │   ├── services/
+│   │   │   │   │   └── transaction.service.ts
+│   │   │   │   ├── repositories/
+│   │   │   │   │   └── transaction.repository.ts
+│   │   │   │   ├── routes/
+│   │   │   │   │   └── transaction.routes.ts
+│   │   │   │   ├── types/
+│   │   │   │   │   └── transaction.types.ts
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   ├── admin/
+│   │   │   │   ├── controllers/
+│   │   │   │   │   └── admin.controller.ts
+│   │   │   │   ├── services/
+│   │   │   │   │   └── admin.service.ts
+│   │   │   │   ├── repositories/
+│   │   │   │   │   └── admin.repository.ts
+│   │   │   │   ├── routes/
+│   │   │   │   │   └── admin.routes.ts
+│   │   │   │   ├── middlewares/
+│   │   │   │   │   └── admin.middleware.ts
+│   │   │   │   ├── types/
+│   │   │   │   │   └── admin.types.ts
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   └── notification/
+│   │   │       ├── controllers/
+│   │   │       │   └── notification.controller.ts
+│   │   │       ├── services/
+│   │   │       │   └── notification.service.ts
+│   │   │       ├── providers/
+│   │   │       │   ├── sms.provider.ts
+│   │   │       │   └── push.provider.ts
+│   │   │       ├── routes/
+│   │   │       │   └── notification.routes.ts
+│   │   │       └── index.ts
+│   │   │
+│   │   ├── core/
+│   │   │   ├── database/
+│   │   │   │   ├── connection.ts
+│   │   │   │   ├── mongodb.ts
+│   │   │   │   └── redis.ts
+│   │   │   ├── middleware/
+│   │   │   │   ├── auth.middleware.ts
+│   │   │   │   ├── error.middleware.ts
+│   │   │   │   ├── validation.middleware.ts
+│   │   │   │   ├── rateLimit.middleware.ts
+│   │   │   │   └── logging.middleware.ts
+│   │   │   ├── utils/
+│   │   │   │   ├── logger.ts
+│   │   │   │   ├── response.ts
+│   │   │   │   ├── otp.util.ts
+│   │   │   │   ├── jwt.util.ts
+│   │   │   │   └── crypto.util.ts
+│   │   │   ├── config/
+│   │   │   │   └── index.ts
+│   │   │   └── constants/
+│   │   │       └── index.ts
+│   │   │
+│   │   ├── shared/
+│   │   │   ├── interfaces/
+│   │   │   │   └── index.ts
+│   │   │   ├── types/
+│   │   │   │   └── index.ts
+│   │   │   └── enums/
+│   │   │       └── index.ts
+│   │   │
+│   │   ├── app.ts
+│   │   └── server.ts
+│   │
+│   ├── tests/
+│   │   ├── unit/
+│   │   ├── integration/
+│   │   └── e2e/
+│   │
+│   ├── .env.example
+│   ├── .eslintrc.json
+│   ├── .prettierrc
+│   ├── tsconfig.json
+│   ├── package.json
+│   └── Dockerfile
+│
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── (auth)/
+│   │   │   │   ├── login/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── verify-otp/
+│   │   │   │       └── page.tsx
+│   │   │   │
+│   │   │   ├── (dashboard)/
+│   │   │   │   ├── admin/
+│   │   │   │   │   ├── dashboard/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── users/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── prices/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── layout.tsx
+│   │   │   │   │
+│   │   │   │   └── panel/
+│   │   │   │       ├── dashboard/
+│   │   │   │       │   └── page.tsx
+│   │   │   │       ├── balance/
+│   │   │   │       │   └── page.tsx
+│   │   │   │       ├── transactions/
+│   │   │   │       │   └── page.tsx
+│   │   │   │       ├── remittances/
+│   │   │   │       │   └── page.tsx
+│   │   │   │       └── layout.tsx
+│   │   │   │
+│   │   │   ├── api/
+│   │   │   │   └── proxy/
+│   │   │   │       └── route.ts
+│   │   │   │
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   │
+│   │   ├── components/
+│   │   │   ├── ui/
+│   │   │   │   ├── Button.tsx
+│   │   │   │   ├── Card.tsx
+│   │   │   │   ├── Input.tsx
+│   │   │   │   ├── Modal.tsx
+│   │   │   │   ├── Table.tsx
+│   │   │   │   └── Spinner.tsx
+│   │   │   ├── layout/
+│   │   │   │   ├── Header.tsx
+│   │   │   │   ├── Sidebar.tsx
+│   │   │   │   └── Footer.tsx
+│   │   │   └── shared/
+│   │   │       ├── Loading.tsx
+│   │   │       ├── Toast.tsx
+│   │   │       └── ErrorBoundary.tsx
+│   │   │
+│   │   ├── hooks/
+│   │   │   ├── useAuth.ts
+│   │   │   ├── useApi.ts
+│   │   │   ├── useLocalStorage.ts
+│   │   │   └── useWebSocket.ts
+│   │   │
+│   │   ├── services/
+│   │   │   ├── api.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── price.service.ts
+│   │   │   └── transaction.service.ts
+│   │   │
+│   │   ├── store/
+│   │   │   ├── authStore.ts
+│   │   │   ├── priceStore.ts
+│   │   │   └── uiStore.ts
+│   │   │
+│   │   ├── types/
+│   │   │   ├── auth.types.ts
+│   │   │   ├── price.types.ts
+│   │   │   └── transaction.types.ts
+│   │   │
+│   │   ├── utils/
+│   │   │   ├── formatters.ts
+│   │   │   ├── validators.ts
+│   │   │   ├── constants.ts
+│   │   │   └── helpers.ts
+│   │   │
+│   │   ├── styles/
+│   │   │   └── globals.css
+│   │   │
+│   │   └── middleware.ts
+│   │
+│   ├── public/
+│   │   ├── icons/
+│   │   ├── manifest.json
+│   │   ├── sw.js
+│   │   └── favicon.ico
+│   │
+│   ├── .env.local.example
+│   ├── .eslintrc.json
+│   ├── .prettierrc
+│   ├── tailwind.config.ts
+│   ├── postcss.config.js
+│   ├── next.config.js
+│   ├── tsconfig.json
+│   ├── package.json
+│   └── Dockerfile
+│
+├── shared/
+│   ├── types/
+│   │   ├── user.types.ts
+│   │   ├── price.types.ts
+│   │   ├── transaction.types.ts
+│   │   └── common.types.ts
+│   │
+│   └── utils/
+│       ├── validators.ts
+│       ├── formatters.ts
+│       └── constants.ts
+│
+├── docker-compose.yml
+├── docker-compose.prod.yml
+├── .gitignore
+├── .env.example
+├── package.json
+├── tsconfig.base.json
+├── turbo.json
+├── README.md
+├── LICENSE
+└── deploy.sh

@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const backup_controller_1 = require("../controllers/backup.controller");
+const auth_middleware_1 = require("../../auth/middlewares/auth.middleware");
+const backup_validator_1 = require("../validators/backup.validator");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authenticateSession, auth_middleware_1.requireAdmin);
+router.get('/live-excel', backup_controller_1.backupController.downloadLiveExcel);
+router.post('/full', backup_validator_1.validateSqlBackup, backup_controller_1.backupController.generateSqlBackup);
+router.get('/history', backup_validator_1.validateGetBackupHistory, backup_controller_1.backupController.getBackupHistory);
+router.post('/cleanup', backup_validator_1.validateCleanupBackups, backup_controller_1.backupController.cleanupBackups);
+exports.default = router;

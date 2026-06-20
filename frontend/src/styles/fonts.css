@@ -1,0 +1,71 @@
+/* تعریف فونت گندم */
+@font-face {
+  font-family: 'Gandom';
+  src: url('/fonts/Gandom-FD.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gandom';
+  src: url('/fonts/Gandom-FD.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+body {
+  font-family: 'Gandom', 'Vazirmatn', sans-serif;
+  direction: rtl;
+  background-color: #f3f4f6;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-layout {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+}
+
+.login-page, .verify-otp-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* اعمال فونت گندم به المان‌های خاص برای اعداد بهتر */
+.price-value,
+.main-input,
+.limit-value,
+.price-value-single,
+.amount-input,
+.detail-value,
+.product-name h3,
+.modal-title .product-name-title,
+.price-item .price-value,
+.product-buy .price-value,
+.product-sell .price-value {
+  font-family: 'Gandom', 'Vazirmatn', sans-serif;
+}
+
+/* اعداد در فیلدهای ورودی */
+input, 
+input[type="text"],
+input[type="number"],
+textarea {
+  font-family: 'Gandom', 'Vazirmatn', sans-serif;
+}
+
+/* اعداد در دکمه‌ها */
+button, .btn-primary, .btn-secondary {
+  font-family: 'Gandom', 'Vazirmatn', sans-serif;
+}
