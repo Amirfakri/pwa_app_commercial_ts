@@ -1,3 +1,5 @@
+// backend/src/modules/admin/controllers/admin.controller.ts
+
 import { Request, Response } from 'express';
 import { AuthRequest } from '../../auth/middlewares/auth.middleware';
 import { adminService } from '../services/admin.service';
@@ -84,9 +86,37 @@ export class AdminController {
   async updateUser(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { is_blocked, first_name, last_name, device_limit, melted_price_offset, coin_price_offset } = req.body;
+      const { 
+        code,
+        is_blocked, 
+        first_name, 
+        last_name, 
+        device_limit, 
+        melted_price_offset, 
+        coin_price_offset 
+      } = req.body;
+      
+      // بررسی اینکه کاربر وجود دارد
+      const currentUser = await adminService.getUserById(parseInt(id));
+      if (!currentUser) {
+        res.status(404).json({ success: false, error: 'کاربر یافت نشد' });
+        return;
+      }
+      
+      // اگر کد کاربر تغییر کرده، بررسی یکتایی
+      if (code && code !== currentUser.code) {
+        const existingUser = await adminService.getUserByCode(code);
+        if (existingUser) {
+          res.status(400).json({ 
+            success: false, 
+            error: 'کد کاربر قبلاً ثبت شده است' 
+          });
+          return;
+        }
+      }
       
       const updated = await adminService.updateUser(parseInt(id), {
+        code,
         first_name,
         last_name,
         device_limit,

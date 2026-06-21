@@ -89,7 +89,7 @@
         <form @submit.prevent="updateUser">
           <div class="form-group">
             <label>کد کاربر</label>
-            <input type="text" v-model="editUserData.code" readonly />
+            <input type="text" v-model="editUserData.code" />
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -355,6 +355,7 @@ const updateUser = async () => {
   loading.value = true;
   try {
     const response = await api.put(`/admin/users/${editUserData.value.id}`, {
+      code: editUserData.value.code,
       first_name: editUserData.value.first_name,
       last_name: editUserData.value.last_name,
       mobile_number: editUserData.value.mobile_number,
@@ -684,6 +685,11 @@ th {
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.btn-save:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .btn-cancel {

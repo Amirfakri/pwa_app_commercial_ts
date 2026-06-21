@@ -129,6 +129,62 @@ export class TransactionRepository {
     return rows;
   }
 
+  // ==================== متدهای جدید برای فیلتر تاریخ با منطقه زمانی ایران ====================
+
+  async getUserTransactionsByDateRange(
+    userId: number,
+    startDate: string,
+    endDate: string,
+    status?: string,
+    limit: number = 100,
+    offset: number = 0
+  ): Promise<ITransaction[]> {
+    // استفاده از AT TIME ZONE برای تبدیل تاریخ به منطقه زمانی ایران
+    let query = `
+      SELECT * FROM transactions 
+      WHERE user_id = $1 
+      AND DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tehran') BETWEEN $2 AND $3
+    `;
+    const params: any[] = [userId, startDate, endDate];
+    let paramIndex = 4;
+    
+    if (status) {
+      query += ' AND status = $' + paramIndex++;
+      params.push(status);
+    }
+    
+    query += ' ORDER BY created_at DESC LIMIT $' + paramIndex++ + ' OFFSET $' + paramIndex++;
+    params.push(limit, offset);
+    
+    const { rows } = await this.pool.query(query, params);
+    return rows;
+  }
+
+  async getUserTransactionsCountByDateRange(
+    userId: number,
+    startDate: string,
+    endDate: string,
+    status?: string
+  ): Promise<number> {
+    let query = `
+      SELECT COUNT(*) as total FROM transactions 
+      WHERE user_id = $1 
+      AND DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tehran') BETWEEN $2 AND $3
+    `;
+    const params: any[] = [userId, startDate, endDate];
+    let paramIndex = 4;
+    
+    if (status) {
+      query += ' AND status = $' + paramIndex++;
+      params.push(status);
+    }
+    
+    const { rows } = await this.pool.query(query, params);
+    return parseInt(rows[0]?.total || '0');
+  }
+
+  // ==================== متدهای قبلی ====================
+
   async getUserTransactionsCount(userId: number, status?: string): Promise<number> {
     let query = 'SELECT COUNT(*) as total FROM transactions WHERE user_id = $1';
     const params: any[] = [userId];
@@ -185,7 +241,6 @@ export class TransactionRepository {
     return parseInt(rows[0]?.total || '0');
   }
 
-  // متد انقضای تراکنش‌های قدیمی با استفاده از تایمر داینامیک
   async expireOldTransactions(iranNowString: string, timerSeconds: number): Promise<ITransaction[]> {
     const { rows } = await this.pool.query(
       `UPDATE transactions 
@@ -198,7 +253,6 @@ export class TransactionRepository {
     return rows;
   }
 
-  // متد برای منقضی کردن یک تراکنش خاص
   async expireTransactionById(id: number, iranNowString: string): Promise<ITransaction | null> {
     const { rows } = await this.pool.query(
       `UPDATE transactions 
@@ -210,7 +264,6 @@ export class TransactionRepository {
     return rows[0] || null;
   }
 
-  // متد برای بررسی و منقضی کردن تراکنش‌های منقضی شده برای یک کاربر خاص
   async expireUserPendingTransactions(userId: number, iranNowString: string, timerSeconds: number): Promise<ITransaction[]> {
     const { rows } = await this.pool.query(
       `UPDATE transactions 

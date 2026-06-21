@@ -1,3 +1,4 @@
+// backend/src/modules/auth/controllers/auth.controller.ts
 
 import { Request, Response } from 'express';
 import { authService } from '../services/auth.service';
@@ -24,7 +25,8 @@ export class AuthController {
         message: 'کد تأیید با موفقیت ارسال شد',
         ...(process.env.NODE_ENV !== 'production' && { otp: result.otp }),
         isNewUser: result.isNewUser,
-        isAdmin: result.userInfo?.isAdmin || false
+        isAdmin: result.userInfo?.isAdmin || false,
+        user: result.userInfo
       });
     } catch (err: any) {
       console.error('خطا در ارسال OTP:', err);
@@ -62,16 +64,27 @@ export class AuthController {
 
       console.log(`✅ نشست ایجاد شد برای ${userData.isAdmin ? 'ادمین' : 'کاربر'} با ID: ${userData.id}`);
 
+      // ساخت full_name برای اطمینان
+      const fullName = userData.full_name || 
+                       `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || 
+                       userData.mobile_number || 
+                       'کاربر';
+
       res.json({
         success: true,
         message: 'ورود با موفقیت انجام شد',
         user: {
           id: userData.id,
           mobile_number: userData.mobile_number,
-          full_name: userData.full_name,
+          first_name: userData.first_name || '',
+          last_name: userData.last_name || '',
+          full_name: fullName,
           code: userData.code,
           isAdmin: userData.isAdmin || false,
-          is_main_admin: userData.is_main_admin || false
+          is_main_admin: userData.is_main_admin || false,
+          device_limit: userData.device_limit || 1,
+          melted_price_offset: userData.melted_price_offset || 0,
+          coin_price_offset: userData.coin_price_offset || 0
         }
       });
     } catch (err: any) {
@@ -99,9 +112,26 @@ export class AuthController {
 
       await sessionService.refreshSession(sessionToken);
 
+      const user = sessionData.user;
+      
+      // ساخت full_name برای اطمینان
+      const fullName = user.full_name || 
+                       `${user.first_name || ''} ${user.last_name || ''}`.trim() || 
+                       user.mobile_number || 
+                       'کاربر';
+
       res.json({
         authenticated: true,
-        user: sessionData.user,
+        user: {
+          id: user.id,
+          mobile_number: user.mobile_number,
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          full_name: fullName,
+          code: user.code,
+          isAdmin: user.isAdmin || false,
+          is_main_admin: user.is_main_admin || false
+        },
         expiresAt: sessionData.session.expires_at
       });
     } catch (err) {
@@ -142,9 +172,34 @@ export class AuthController {
         return;
       }
 
+      // دریافت اطلاعات کامل کاربر از دیتابیس
+      const userData = await authService.getUserById(req.user.id);
+      
+      if (!userData) {
+        res.status(404).json({ error: 'کاربر یافت نشد' });
+        return;
+      }
+
+      const fullName = userData.full_name || 
+                       `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || 
+                       userData.mobile_number || 
+                       'کاربر';
+
       res.json({
         success: true,
-        data: req.user
+        data: {
+          id: userData.id,
+          mobile_number: userData.mobile_number,
+          first_name: userData.first_name || '',
+          last_name: userData.last_name || '',
+          full_name: fullName,
+          code: userData.code,
+          isAdmin: userData.is_admin || false,
+          is_main_admin: userData.is_main_admin || false,
+          device_limit: userData.device_limit || 1,
+          melted_price_offset: userData.melted_price_offset || 0,
+          coin_price_offset: userData.coin_price_offset || 0
+        }
       });
     } catch (err) {
       console.error('خطا در دریافت پروفایل:', err);

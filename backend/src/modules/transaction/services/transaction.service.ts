@@ -1,3 +1,5 @@
+// backend/src/modules/transaction/services/transaction.service.ts
+
 import moment from 'moment-timezone';
 import { transactionRepository } from '../repositories/transaction.repository';
 import { priceRepository } from '../../price/repositories/price.repository';
@@ -7,6 +9,10 @@ import { ICreateTransactionInput } from '../repositories/transaction.repository'
 export class TransactionService {
   private getIranTimeString(): string {
     return moment().tz('Asia/Tehran').format('YYYY-MM-DD HH:mm:ss');
+  }
+
+  private getIranDate(): string {
+    return moment().tz('Asia/Tehran').format('YYYY-MM-DD');
   }
 
   private detectProductType(productCode: string): 'melted' | 'coin' {
@@ -57,12 +63,20 @@ export class TransactionService {
     const productType = this.detectProductType(input.product_code);
     const timerSeconds = await transactionRepository.getTimer();
 
-    // دریافت آخرین قیمت
-    const today = moment().tz('Asia/Tehran').format('YYYY-MM-DD');
-    const priceData = await priceRepository.getTodayPrice(input.product_code, today);
+    // دریافت آخرین قیمت با تاریخ ایران
+    const today = this.getIranDate();
+    let priceData = await priceRepository.getTodayPrice(input.product_code, today);
     
+    // اگر قیمت امروز وجود نداشت، آخرین قیمت موجود را بگیر
     if (!priceData) {
-      throw new Error('قیمت برای محصول یافت نشد');
+      console.warn(`⚠️ قیمت امروز برای ${input.product_code} یافت نشد، جستجوی آخرین قیمت...`);
+      priceData = await priceRepository.getLatestPrice(input.product_code);
+      
+      if (!priceData) {
+        throw new Error(`قیمت برای محصول ${input.product_code} یافت نشد. لطفاً ابتدا قیمت را ثبت کنید.`);
+      }
+      
+      console.log(`✅ استفاده از آخرین قیمت برای ${input.product_code}: buy=${priceData.buy_price}, sell=${priceData.sell_price}`);
     }
 
     // بررسی فعال بودن قیمت برای نوع معامله
@@ -271,7 +285,7 @@ export class TransactionService {
     };
   }
 
-  // متد جدید برای دریافت تراکنش‌ها در بازه زمانی
+  // متد جدید برای دریافت تراکنش‌ها در بازه زمانی با تاریخ ایران
   async getUserTransactionsByDateRange(
     userId: number,
     startDate: string,
@@ -283,39 +297,22 @@ export class TransactionService {
     const offset = (page - 1) * limit;
     const timerSeconds = await transactionRepository.getTimer();
     
-    // کوئری برای دریافت تراکنش‌های بازه زمانی
-    let query = `
-      SELECT * FROM transactions 
-      WHERE user_id = $1 AND DATE(created_at) BETWEEN $2 AND $3
-    `;
-    const params: any[] = [userId, startDate, endDate];
-    let paramIndex = 4;
+    // استفاده از متد جدید با پشتیبانی از تاریخ ایران
+    const transactions = await transactionRepository.getUserTransactionsByDateRange(
+      userId,
+      startDate,
+      endDate,
+      status,
+      limit,
+      offset
+    );
     
-    if (status) {
-      query += ` AND status = $${paramIndex++}`;
-      params.push(status);
-    }
-    
-    query += ` ORDER BY created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
-    params.push(limit, offset);
-    
-    const { rows: transactions } = await transactionRepository['pool'].query(query, params);
-    
-    // کوئری برای شمارش کل تراکنش‌های بازه زمانی
-    let countQuery = `
-      SELECT COUNT(*) as total FROM transactions 
-      WHERE user_id = $1 AND DATE(created_at) BETWEEN $2 AND $3
-    `;
-    const countParams: any[] = [userId, startDate, endDate];
-    let countIndex = 4;
-    
-    if (status) {
-      countQuery += ` AND status = $${countIndex++}`;
-      countParams.push(status);
-    }
-    
-    const countResult = await transactionRepository['pool'].query(countQuery, countParams);
-    const total = parseInt(countResult.rows[0]?.total || '0');
+    const total = await transactionRepository.getUserTransactionsCountByDateRange(
+      userId,
+      startDate,
+      endDate,
+      status
+    );
     
     const formattedTransactions = transactions.map((tx: any) => {
       let remainingSeconds = null;
@@ -450,8 +447,6 @@ export class TransactionService {
     const expiredTransactions = await transactionRepository.expireOldTransactions(now, timerSeconds);
     
     for (const transaction of expiredTransactions) {
-      
-      
       const expiredData = {
         id: transaction.id,
         user_id: transaction.user_id,
@@ -471,12 +466,7 @@ export class TransactionService {
       if (io) {
         io.to(`user_${transaction.user_id}`).emit('transaction_expired', expiredData);
         io.to('admin_room').emit('transaction_expired', expiredData);
-      
       }
-    }
-    
-    if (expiredTransactions.length > 0) {
-     
     }
     
     return expiredTransactions;

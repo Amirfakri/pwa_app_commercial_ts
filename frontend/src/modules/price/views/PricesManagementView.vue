@@ -79,12 +79,13 @@
             </div>
 
             <div v-else class="products-grid">
-              <!-- سکه‌ها -->
+             
+                           <!-- آبشده‌ها -->
               <div class="product-category">
-                <h3 class="category-title">🪙 سکه‌ها</h3>
+                <h3 class="category-title"> آبشده‌ها</h3>
                 <div class="category-products">
                   <div 
-                    v-for="product in coinProducts" 
+                    v-for="product in meltedProducts" 
                     :key="product.code"
                     :ref="el => setProductRef(el, product.code)"
                     class="product-card"
@@ -94,11 +95,11 @@
                         <h3 class="product-name">{{ product.display_name || product.name }}</h3>
                         <span class="product-code">{{ product.code }}</span>
                       </div>
-                      <span class="type-badge coin">سکه</span>
+                      <span class="type-badge melted">آبشده</span>
                     </div>
 
                     <div class="product-range">
-                      🔢 محدوده تعداد: {{ formatNumber(product.min_count) }} - {{ formatNumber(product.max_count) }} عدد
+                      ⚖️ محدوده وزن: {{ formatNumber(product.min_weight) }} - {{ formatNumber(product.max_weight) }} گرم
                     </div>
 
                     <div class="prices-row">
@@ -191,13 +192,14 @@
                   </div>
                 </div>
               </div>
-
-              <!-- آبشده‌ها -->
+             
+             
+              <!-- سکه‌ها -->
               <div class="product-category">
-                <h3 class="category-title">🥇 آبشده‌ها</h3>
+                <h3 class="category-title"> سکه‌ها</h3>
                 <div class="category-products">
                   <div 
-                    v-for="product in meltedProducts" 
+                    v-for="product in coinProducts" 
                     :key="product.code"
                     :ref="el => setProductRef(el, product.code)"
                     class="product-card"
@@ -207,11 +209,11 @@
                         <h3 class="product-name">{{ product.display_name || product.name }}</h3>
                         <span class="product-code">{{ product.code }}</span>
                       </div>
-                      <span class="type-badge melted">آبشده</span>
+                      <span class="type-badge coin">سکه</span>
                     </div>
 
                     <div class="product-range">
-                      ⚖️ محدوده وزن: {{ formatNumber(product.min_weight) }} - {{ formatNumber(product.max_weight) }} گرم
+                      🔢 محدوده تعداد: {{ formatNumber(product.min_count) }} - {{ formatNumber(product.max_count) }} عدد
                     </div>
 
                     <div class="prices-row">

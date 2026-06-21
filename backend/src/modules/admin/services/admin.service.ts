@@ -1,9 +1,20 @@
+// backend/src/modules/admin/services/admin.service.ts
 
 import { userRepository } from '../../auth/repositories/user.repository';
 import { adminRepository } from '../../auth/repositories/admin.repository';
 import { sessionRepository } from '../../auth/repositories/session.repository';
+import { IUser, IUserUpdateInput } from '../types/admin.types';
 
 export class AdminService {
+  // متدهای جدید برای مدیریت کد کاربر
+  async getUserByCode(code: string): Promise<IUser | null> {
+    return userRepository.findByCode(code);
+  }
+
+  async getUserById(id: number): Promise<IUser | null> {
+    return userRepository.findById(id);
+  }
+
   async getAllUsers(filters: { search?: string; is_blocked?: boolean; page?: number; limit?: number }) {
     return userRepository.findAll(filters);
   }
@@ -22,7 +33,17 @@ export class AdminService {
     });
   }
 
-  async updateUser(id: number, data: any) {
+  async updateUser(id: number, data: IUserUpdateInput) {
+    // اگر کد در حال تغییر است، بررسی یکتایی
+    if (data.code) {
+      const existingUser = await userRepository.findByCode(data.code);
+      const currentUser = await userRepository.findById(id);
+      
+      // اگر کاربر دیگری با این کد وجود دارد و کاربر فعلی نیست
+      if (existingUser && existingUser.id !== id) {
+        throw new Error('کد کاربر قبلاً ثبت شده است');
+      }
+    }
     return userRepository.update(id, data);
   }
 

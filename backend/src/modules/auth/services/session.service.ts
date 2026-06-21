@@ -1,3 +1,4 @@
+// backend/src/modules/auth/services/session.service.ts
 
 import crypto from 'crypto';
 import { Request } from 'express';
@@ -6,6 +7,36 @@ import { userRepository } from '../repositories/user.repository';
 
 export class SessionService {
   private readonly SESSION_DURATION_DAYS = 90;
+  
+  // ==================== متد کمکی برای ساخت full_name ====================
+  
+  private buildFullName(user: any): string {
+    if (!user) return 'کاربر';
+    
+    if (user.full_name && user.full_name.trim()) {
+      return user.full_name.trim();
+    }
+    
+    const firstName = user.first_name || '';
+    const lastName = user.last_name || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    
+    if (fullName) {
+      return fullName;
+    }
+    
+    if (user.mobile_number) {
+      return user.mobile_number;
+    }
+    
+    if (user.code) {
+      return user.code;
+    }
+    
+    return 'کاربر';
+  }
+
+  // ==================== متدهای سرویس ====================
   
   generateSecureToken(): string {
     return crypto.randomBytes(64).toString('hex');
@@ -25,7 +56,6 @@ export class SessionService {
       throw new Error('کاربر یافت نشد');
     }
     
-    // بررسی محدودیت دستگاه (فقط برای کاربران عادی - غیر ادمین)
     if (!isAdmin && !user.is_admin) {
       const activeSessions = await sessionRepository.getActiveSessionsCount(userId);
       const deviceLimit = user.device_limit || 1;
@@ -65,13 +95,17 @@ export class SessionService {
       return null;
     }
     
+    const fullName = this.buildFullName(user);
+
     return {
       user: {
         id: user.id,
         mobile_number: user.mobile_number,
-        full_name: user.full_name,
+        full_name: fullName,
         code: user.code,
-        isAdmin: user.is_admin || false
+        isAdmin: user.is_admin || false,
+        first_name: user.first_name,
+        last_name: user.last_name
       },
       session: {
         id: session.id,

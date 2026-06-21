@@ -1,3 +1,5 @@
+// backend/src/modules/transaction/controllers/transaction.controller.ts
+
 import { Request, Response } from 'express';
 import moment from 'moment-timezone';
 import { AuthRequest } from '../../auth/middlewares/auth.middleware';
@@ -20,11 +22,33 @@ export class TransactionController {
         { product_code, type, coin_quantity, melted_weight, amount }
       );
       
+      // دریافت اطلاعات کاربر برای ارسال در Socket.IO
+      const userResult = await pool.query(
+        'SELECT first_name, last_name, code, mobile_number FROM users WHERE id = $1',
+        [userId]
+      );
+      const user = userResult.rows[0] || {};
+      const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.code || 'کاربر';
+      
+      // ایجاد payload کامل با اطلاعات کاربر
+      const payload = {
+        ...transaction,
+        user_name: fullName,
+        user: {
+          id: userId,
+          full_name: fullName,
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          code: user.code || '',
+          mobile_number: user.mobile_number || ''
+        }
+      };
+      
       const io = req.app.get('io');
       if (io) {
-        io.emit('new_transaction', transaction);
-        io.to('admin_room').emit('new_transaction', transaction);
-        io.to(`user_${userId}`).emit('new_transaction', transaction);
+        io.emit('new_transaction', payload);
+        io.to('admin_room').emit('new_transaction', payload);
+        io.to(`user_${userId}`).emit('new_transaction', payload);
       }
       
       res.status(201).json({
@@ -47,34 +71,56 @@ export class TransactionController {
       
       let result;
       
+      // تبدیل تاریخ‌ها به منطقه زمانی ایران
+      let startDateIran = start_date as string;
+      let endDateIran = end_date as string;
+      
+      if (start_date) {
+        try {
+          const startMoment = moment.tz(start_date as string, 'Asia/Tehran');
+          startDateIran = startMoment.format('YYYY-MM-DD');
+        } catch (e) {
+          startDateIran = start_date as string;
+        }
+      }
+      
+      if (end_date) {
+        try {
+          const endMoment = moment.tz(end_date as string, 'Asia/Tehran');
+          endDateIran = endMoment.format('YYYY-MM-DD');
+        } catch (e) {
+          endDateIran = end_date as string;
+        }
+      }
+      
       // اگر بازه تاریخ مشخص شده باشد (start_date و end_date)
-      if (start_date && end_date) {
+      if (startDateIran && endDateIran) {
         result = await transactionService.getUserTransactionsByDateRange(
           userId,
-          start_date as string,
-          end_date as string,
+          startDateIran,
+          endDateIran,
           status as string,
           parseInt(page as string),
           parseInt(limit as string)
         );
       } 
       // اگر فقط start_date داشته باشیم (تاریخ شروع)
-      else if (start_date && !end_date) {
+      else if (startDateIran && !endDateIran) {
         result = await transactionService.getUserTransactionsByDateRange(
           userId,
-          start_date as string,
-          start_date as string,
+          startDateIran,
+          startDateIran,
           status as string,
           parseInt(page as string),
           parseInt(limit as string)
         );
       }
       // اگر فقط end_date داشته باشیم (تاریخ پایان)
-      else if (!start_date && end_date) {
+      else if (!startDateIran && endDateIran) {
         result = await transactionService.getUserTransactionsByDateRange(
           userId,
-          end_date as string,
-          end_date as string,
+          endDateIran,
+          endDateIran,
           status as string,
           parseInt(page as string),
           parseInt(limit as string)
@@ -82,9 +128,16 @@ export class TransactionController {
       }
       // اگر تاریخ مشخص شده باشد (برای سازگاری با نسخه قبلی)
       else if (date) {
+        let dateIran = date as string;
+        try {
+          const dateMoment = moment.tz(date as string, 'Asia/Tehran');
+          dateIran = dateMoment.format('YYYY-MM-DD');
+        } catch (e) {
+          dateIran = date as string;
+        }
         result = await transactionService.getUserTransactionsByDate(
           userId,
-          date as string,
+          dateIran,
           status as string,
           parseInt(page as string),
           parseInt(limit as string)
@@ -190,15 +243,15 @@ export class TransactionController {
       let paramIndex = 1;
 
       if (start_date && end_date) {
-        query += ` AND DATE(t.created_at) BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+        query += ` AND DATE(t.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tehran') BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
         params.push(start_date, end_date);
         paramIndex += 2;
       } else if (start_date) {
-        query += ` AND DATE(t.created_at) >= $${paramIndex}`;
+        query += ` AND DATE(t.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tehran') >= $${paramIndex}`;
         params.push(start_date);
         paramIndex++;
       } else if (end_date) {
-        query += ` AND DATE(t.created_at) <= $${paramIndex}`;
+        query += ` AND DATE(t.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tehran') <= $${paramIndex}`;
         params.push(end_date);
         paramIndex++;
       }
@@ -232,15 +285,15 @@ export class TransactionController {
       let countIndex = 1;
 
       if (start_date && end_date) {
-        countQuery += ` AND DATE(t.created_at) BETWEEN $${countIndex} AND $${countIndex + 1}`;
+        countQuery += ` AND DATE(t.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tehran') BETWEEN $${countIndex} AND $${countIndex + 1}`;
         countParams.push(start_date, end_date);
         countIndex += 2;
       } else if (start_date) {
-        countQuery += ` AND DATE(t.created_at) >= $${countIndex}`;
+        countQuery += ` AND DATE(t.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tehran') >= $${countIndex}`;
         countParams.push(start_date);
         countIndex++;
       } else if (end_date) {
-        countQuery += ` AND DATE(t.created_at) <= $${countIndex}`;
+        countQuery += ` AND DATE(t.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tehran') <= $${countIndex}`;
         countParams.push(end_date);
         countIndex++;
       }
@@ -320,11 +373,33 @@ export class TransactionController {
         return;
       }
       
+      // دریافت اطلاعات کاربر برای ارسال در Socket.IO
+      const userResult = await pool.query(
+        'SELECT first_name, last_name, code, mobile_number FROM users WHERE id = $1',
+        [transaction.user_id]
+      );
+      const user = userResult.rows[0] || {};
+      const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.code || 'کاربر';
+      
+      // ایجاد payload کامل با اطلاعات کاربر
+      const payload = {
+        ...transaction,
+        user_name: fullName,
+        user: {
+          id: transaction.user_id,
+          full_name: fullName,
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          code: user.code || '',
+          mobile_number: user.mobile_number || ''
+        }
+      };
+      
       const io = req.app.get('io');
       if (io) {
-        io.emit('transaction_update', transaction);
-        io.to(`user_${transaction.user_id}`).emit('transaction_update', transaction);
-        io.to('admin_room').emit('transaction_update', transaction);
+        io.emit('transaction_update', payload);
+        io.to(`user_${transaction.user_id}`).emit('transaction_update', payload);
+        io.to('admin_room').emit('transaction_update', payload);
       }
       
       res.json({
@@ -666,12 +741,29 @@ export class TransactionController {
         }
       };
 
+      // دریافت اطلاعات کاربر برای ارسال در Socket.IO
+      const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.code || 'کاربر';
+      
+      // ایجاد payload کامل با اطلاعات کاربر
+      const payload = {
+        ...formattedTransaction,
+        user_name: fullName,
+        user: {
+          id: user_id,
+          full_name: fullName,
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          code: user.code || '',
+          mobile_number: user.mobile_number || ''
+        }
+      };
+
       // ارسال از طریق Socket.IO
       const io = req.app.get('io');
       if (io) {
-        io.emit('new_transaction', formattedTransaction);
-        io.to('admin_room').emit('new_transaction', formattedTransaction);
-        io.to(`user_${user_id}`).emit('new_transaction', formattedTransaction);
+        io.emit('new_transaction', payload);
+        io.to('admin_room').emit('new_transaction', payload);
+        io.to(`user_${user_id}`).emit('new_transaction', payload);
       }
 
       res.status(201).json({

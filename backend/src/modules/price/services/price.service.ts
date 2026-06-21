@@ -1,5 +1,6 @@
 // backend/src/modules/price/services/price.service.ts
 
+import moment from 'moment-timezone';
 import { priceRepository } from '../repositories/price.repository';
 import { productRepository } from '../repositories/product.repository';
 import { historyRepository } from '../repositories/history.repository';
@@ -8,8 +9,13 @@ import { ICreatePriceInput, IUpdatePriceInput, IProductWithPrice } from '../type
 
 export class PriceService {
   
+  // تابع کمکی برای دریافت تاریخ ایران
+  private getIranDate(): string {
+    return moment().tz('Asia/Tehran').format('YYYY-MM-DD');
+  }
+
   async getTodayPrice(productCode: string, userId: number, isAdmin: boolean) {
-    const today = new Date().toISOString().split('T')[0];
+    const today = this.getIranDate(); // استفاده از تاریخ ایران
     const price = await priceRepository.getTodayPrice(productCode, today);
     
     if (!price) {
@@ -46,7 +52,7 @@ export class PriceService {
   }
   
   async getAllTodayPrices(userId: number, isAdmin: boolean) {
-    const today = new Date().toISOString().split('T')[0];
+    const today = this.getIranDate(); // استفاده از تاریخ ایران
     const prices = await priceRepository.getAllTodayPrices(today);
     
     const offsets = await offsetService.getUserOffsets(userId, isAdmin);
@@ -84,7 +90,6 @@ export class PriceService {
     return result;
   }
   
-  // تابع کمکی برای گرفتن display_name از محصول
   private async getDisplayNameFromProduct(productCode: string): Promise<string | null> {
     try {
       const product = await productRepository.getMeltedProductByCode(productCode);
@@ -105,9 +110,8 @@ export class PriceService {
   }
   
   async createOrUpdatePrice(data: ICreatePriceInput, adminUserId: number) {
-    const today = new Date().toISOString().split('T')[0];
+    const today = this.getIranDate(); // استفاده از تاریخ ایران
     
-    // اگر display_name ارسال نشده، از محصول بگیر
     let displayName = data.display_name;
     if (!displayName || displayName === 'null' || displayName === '') {
       displayName = await this.getDisplayNameFromProduct(data.product_code);
@@ -135,7 +139,6 @@ export class PriceService {
       }, today);
     }
     
-    // ذخیره در تاریخچه
     if (price) {
       await historyRepository.addToHistory({
         product_code: price.product_code,
@@ -152,7 +155,6 @@ export class PriceService {
   }
   
   async updatePriceById(id: number, data: IUpdatePriceInput, adminUserId: number) {
-    // اگر display_name ارسال نشده، قیمت موجود را بگیر و از آن استفاده کن
     let displayName = data.display_name;
     if (!displayName || displayName === 'null' || displayName === '') {
       const existingPrice = await priceRepository.updatePriceById(id, {});
@@ -186,7 +188,7 @@ export class PriceService {
   
   async getProductsWithPrices(userId: number, isAdmin: boolean): Promise<IProductWithPrice[]> {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = this.getIranDate(); // استفاده از تاریخ ایران
       
       const meltedProducts = await productRepository.getAllMeltedProducts(false);
       const coinProducts = await productRepository.getAllCoinProducts(false);
@@ -216,7 +218,6 @@ export class PriceService {
         let userIsVisibleBuy: boolean;
         let userIsVisibleSell: boolean;
         
-        // تعیین display_name: اول از price، سپس از product
         let displayName = price?.display_name;
         if (!displayName || displayName === 'null' || displayName === '') {
           if (isMelted) {
@@ -287,11 +288,8 @@ export class PriceService {
   }
   
   async archiveYesterdayPrices() {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    
-    return await historyRepository.archiveYesterdayPrices(yesterdayStr);
+    const yesterday = moment().tz('Asia/Tehran').subtract(1, 'day').format('YYYY-MM-DD');
+    return await historyRepository.archiveYesterdayPrices(yesterday);
   }
 }
 
